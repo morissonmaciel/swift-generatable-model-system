@@ -412,3 +412,46 @@ func testGenerateNoProviderError() async throws {
         // Test passes - we got the expected error
     }
 }
+
+@Test("JSON extraction with complex nested content and escaped characters")
+func testComplexJsonExtraction() async throws {
+    let complexJson = """
+    {
+      "message": "A RAG system combines a large language model with an external knowledge base. Here's how it works:\\n\\n1. **Retrieval:** When a user asks a question, the system searches a knowledge base.\\n2. **Augmentation:** The retrieved information is added to the original question, effectively \\"augmenting\\" it with context.\\n3. **Generation:** The augmented query is fed to the LLM.",
+      "suggestions": [
+        "What are some common knowledge bases used in RAG systems?",
+        "How does RAG improve upon traditional LLM-based question answering?",
+        "Can you explain the different retrieval methods used in RAG systems?"
+      ],
+      "topics": [
+        "RAG System",
+        "Large Language Models",
+        "Knowledge Retrieval"
+      ]
+    }
+    """
+    
+    let responseWithMarkdown = "```json\n\(complexJson)\n```"
+    
+    // Test that extractJSON correctly handles this complex case
+    let extractedJSON = responseWithMarkdown.extractJSON()
+    #expect(extractedJSON != nil, "Should extract JSON from markdown wrapper")
+    
+    if let extractedJSON = extractedJSON {
+        // Verify the extracted JSON is valid
+        let data = extractedJSON.data(using: String.Encoding.utf8)!
+        let _ = try JSONSerialization.jsonObject(with: data)
+        
+        // Test that it can be decoded to a structure with the same fields
+        struct ComplexTestResponse: Codable {
+            let message: String
+            let topics: [String]
+            let suggestions: [String]
+        }
+        
+        let response = try JSONDecoder().decode(ComplexTestResponse.self, from: data)
+        #expect(response.message.contains("RAG system"), "Should decode message correctly")
+        #expect(response.topics.count == 3, "Should have correct number of topics")
+        #expect(response.suggestions.count == 3, "Should have correct number of suggestions")
+    }
+}
