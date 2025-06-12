@@ -170,25 +170,31 @@ enum InvalidDestination: String, Codable {  // Missing CaseIterable
 ### Level 5: Type-Safe Language Model Communication
 
 ```swift
-// Set up a default provider (optional - for convenience)
+// Set up default providers (optional - for convenience)
 LanguageModelSession.defaultProvider = MyLanguageModelProvider()
+LanguageModelSession.defaultURLSession = customURLSession // Optional custom session
 
-// Create a language model session (using default provider)
-let session = LanguageModelSession("gpt-4") {
+// Create a language model session
+var session = LanguageModelSession("gpt-4") {
     "You are a helpful assistant that generates structured data."
 }
 
-// Or with explicit provider
-let session2 = LanguageModelSession("claude-3", provider: customProvider)
+// Option 1: Set provider and URLSession via properties
+session.provider = myProvider
+session.urlSession = myURLSession
+
+// Option 2: Use default providers (if set)
+// session will automatically fallback to LanguageModelSession.defaultProvider
+// and LanguageModelSession.defaultURLSession (or .shared if nil)
 
 // The macro automatically generates JSON Schema
 let schema = UserProfile.scheme
 
-// Type-safe request with structured response
-let response: UserProfile = try await session.generate(
-    prompt: "Generate a user profile for a software developer",
-    responseType: UserProfile.self
-)
+// Type-safe request with structured JSON response
+let response: UserProfile = try await session.respond(to: "Generate a user profile for a software developer")
+
+// Raw text generation (no JSON parsing)
+let rawText: String = try await session.generate(to: "Tell me a joke")
 
 // ✨ Zero boilerplate - the macro handles everything!
 ```
@@ -310,14 +316,19 @@ Before using the library, configure your language model provider:
 ```swift
 // Create your custom provider implementing LanguageModelProvider
 class MyLanguageModelProvider: LanguageModelProvider {
-    // Implement required methods
-    func generate(prompt: String, model: String, responseType: Any.Type) async throws -> Any {
-        // Your implementation here
+    var api: LanguageModelProviderAPI { .openAI }
+    var address: URL { URL(string: "https://api.openai.com")! }
+    var apiKey: String { "your-api-key" }
+    
+    // Optional: Custom URLSession factory
+    func makeURLSession() -> URLSession {
+        return URLSession.shared
     }
 }
 
 // Set as default provider (optional)
 LanguageModelSession.defaultProvider = MyLanguageModelProvider()
+LanguageModelSession.defaultURLSession = customURLSession // Optional
 ```
 
 ### Basic Configuration
@@ -342,17 +353,108 @@ struct UserProfile {
 
 3. Initialize a language model session:
 ```swift
-let session = LanguageModelSession("gpt-4") {
+var session = LanguageModelSession("gpt-4") {
     "You are a helpful assistant that generates structured data."
+}
+
+// Set provider via properties (recommended)
+session.provider = myProvider
+session.urlSession = myURLSession // Optional
+```
+
+4. Generate responses:
+```swift
+// Structured JSON response
+let profile: UserProfile = try await session.respond(to: "Generate a profile for a software developer")
+
+// Raw text response  
+let rawResponse: String = try await session.generate(to: "Tell me about Swift programming")
+```
+
+## LanguageModelSession API
+
+The `LanguageModelSession` provides two main methods for interacting with language models:
+
+### respond(to:) - Structured JSON Response
+
+Returns a strongly-typed response by parsing JSON from the LLM output:
+
+```swift
+// Simple string input
+let response: UserProfile = try await session.respond(to: "Generate a user profile")
+
+// With PromptBuilder
+let response: UserProfile = try await session.respond {
+    "Generate a user profile for a \(profession) from \(country)"
 }
 ```
 
-4. Generate structured responses:
+**Features:**
+- ✅ Automatic JSON extraction from LLM response (handles markdown code blocks)
+- ✅ Strong typing with compile-time safety
+- ✅ Automatic Codable decoding to your struct
+- ✅ Throws `LanguageModelSessionError` on parsing failures
+
+### generate(to:) - Raw Text Response
+
+Returns the raw text response without any JSON parsing:
+
 ```swift
-let profile: UserProfile = try await session.generate(
-    prompt: "Generate a profile for a software developer",
-    responseType: UserProfile.self
-)
+// Simple string input
+let rawText: String = try await session.generate(to: "Tell me a joke")
+
+// With PromptBuilder  
+let rawText: String = try await session.generate {
+    "Write a story about \(character) in \(setting)"
+}
+```
+
+**Features:**
+- ✅ Returns unprocessed LLM response text
+- ✅ No JSON parsing or structure validation
+- ✅ Useful for creative writing, explanations, or non-structured output
+- ✅ Same error handling for network/provider issues
+
+### Provider and URLSession Configuration
+
+Both methods support flexible configuration:
+
+```swift
+var session = LanguageModelSession("model-name")
+
+// Option 1: Instance-level configuration
+session.provider = myProvider
+session.urlSession = myURLSession
+
+// Option 2: Use static defaults
+LanguageModelSession.defaultProvider = myProvider
+LanguageModelSession.defaultURLSession = myURLSession
+
+// Option 3: Mixed approach
+session.provider = myProvider  // Instance-specific provider
+// Uses LanguageModelSession.defaultURLSession or .shared as fallback
+```
+
+**Fallback Order:**
+1. Instance `session.provider` → Static `LanguageModelSession.defaultProvider` → Throws error
+2. Instance `session.urlSession` → Static `LanguageModelSession.defaultURLSession` → `URLSession.shared`
+
+### Error Handling
+
+Both methods throw `LanguageModelSessionError`:
+
+```swift
+do {
+    let response: UserProfile = try await session.respond(to: "Generate profile")
+} catch LanguageModelSessionError.noDefaultProviderSet {
+    // No provider configured
+} catch LanguageModelSessionError.invalidResponseStatusCode {
+    // HTTP error from LLM provider
+} catch LanguageModelSessionError.invalidResponseFormat(let content) {
+    // JSON parsing failed (respond only)
+} catch LanguageModelSessionError.invalidResponseData {
+    // Data conversion failed
+}
 ```
 
 ## ManualSchemaBuilder API
