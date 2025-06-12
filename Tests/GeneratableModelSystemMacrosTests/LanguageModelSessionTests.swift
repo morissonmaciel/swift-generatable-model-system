@@ -97,6 +97,9 @@ class MockLanguageModelProvider: LanguageModelProvider {
 
 // Mock URL Protocol for simulating network responses
 class MockURLProtocol: URLProtocol {
+    static var streamingChunks: [String] = []
+    static var shouldStream: Bool = false
+    
     override class func canInit(with request: URLRequest) -> Bool {
         return true
     }
@@ -124,20 +127,29 @@ class MockURLProtocol: URLProtocol {
             return
         }
         
-        // Create mock response data in expected format - escape newlines in content
-        let escapedContent = mockResponse.content.replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\"", with: "\\\"")
-        let responseJSON = """
-        {"model":"test-model","created":1623456789,"usage":{"prompt_tokens":10,"completion_tokens":20,"total_tokens":30},"choices":[{"index":0,"text":"\(escapedContent)"}]}
-        """
-        
-        
         let response = HTTPURLResponse(url: url,
                                      statusCode: 200,
                                      httpVersion: "2.0",
                                      headerFields: ["Content-Type": "application/json"])!
         
         client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client.urlProtocol(self, didLoad: responseJSON.data(using: .utf8)!)
+        
+        // Check if this should be a streaming response
+        if MockURLProtocol.shouldStream && !MockURLProtocol.streamingChunks.isEmpty {
+            // Send data in chunks for streaming simulation
+            for chunk in MockURLProtocol.streamingChunks {
+                let chunkData = chunk.data(using: .utf8)!
+                client.urlProtocol(self, didLoad: chunkData)
+            }
+        } else {
+            // Create mock response data in expected format - escape newlines in content
+            let escapedContent = mockResponse.content.replacingOccurrences(of: "\n", with: "\\n").replacingOccurrences(of: "\"", with: "\\\"")
+            let responseJSON = """
+            {"model":"test-model","created":1623456789,"usage":{"prompt_tokens":10,"completion_tokens":20,"total_tokens":30},"choices":[{"index":0,"text":"\(escapedContent)"}]}
+            """
+            client.urlProtocol(self, didLoad: responseJSON.data(using: .utf8)!)
+        }
+        
         client.urlProtocolDidFinishLoading(self)
     }
     
@@ -507,6 +519,72 @@ func testStreamingRequestsUseStreamingPayload() async throws {
     // Test generate request
     let _ = try await session.generate(to: "test prompt")
     #expect(provider.lastStreamingValue == false, "Generate should use non-streaming payload")
+}
+
+@Test("LanguageModelSession respondPartially actually yields partial content")
+func testRespondPartiallyYieldsContent() async throws {
+    // Reset streaming state with proper OpenAI response format
+    MockURLProtocol.shouldStream = true
+    MockURLProtocol.streamingChunks = [
+        "{\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+    ]
+    
+    defer {
+        MockURLProtocol.shouldStream = false
+        MockURLProtocol.streamingChunks = []
+    }
+    
+    let provider = MockLanguageModelProvider(mockResponse: "unused")
+    let mockURLSession = provider.makeURLSession()
+    var session = LanguageModelSession("test-model")
+    session.provider = provider
+    session.urlSession = mockURLSession
+    
+    var receivedPartials: [TripPlan.PartiallyGenerated] = []
+    
+    // Actually consume the stream and verify content
+    for try await partial in session.respondPartially(to: "Generate trip plan") as AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> {
+        if let partial = partial {
+            receivedPartials.append(partial)
+            break // Get one result and break
+        }
+    }
+    
+    #expect(!receivedPartials.isEmpty, "Should receive at least one partial result")
+    #expect(receivedPartials.first?.destination == .japan, "Should receive partial with destination Japan")
+}
+
+@Test("LanguageModelSession respondPartially with text fragments processes incremental updates")
+func testRespondPartiallyWithTextFragments() async throws {
+    // Reset streaming state with proper OpenAI response format
+    MockURLProtocol.shouldStream = true
+    MockURLProtocol.streamingChunks = [
+        "{\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+    ]
+    
+    defer {
+        MockURLProtocol.shouldStream = false
+        MockURLProtocol.streamingChunks = []
+    }
+    
+    let provider = MockLanguageModelProvider(mockResponse: "unused")
+    let mockURLSession = provider.makeURLSession()
+    var session = LanguageModelSession("test-model")
+    session.provider = provider
+    session.urlSession = mockURLSession
+    
+    var receivedPartials: [TripPlan.PartiallyGenerated] = []
+    
+    // Test with text fragments enabled
+    for try await partial in session.respondPartially(to: "Generate trip plan", allowsTextFragment: true) as AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> {
+        if let partial = partial {
+            receivedPartials.append(partial)
+            break
+        }
+    }
+    
+    #expect(!receivedPartials.isEmpty, "Should receive partial updates with text fragments enabled")
+    #expect(receivedPartials.first?.destination == .japan, "Should parse destination correctly with text fragments")
 }
 
 @Test("Provider payload contains correct model and prompt")

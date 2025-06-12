@@ -157,20 +157,37 @@ func testStringExtractPartialJSONValidObjects() {
 }
 
 
-@Test("LanguageModelSession respondPartially method exists and has correct signature")
-func testLanguageModelSessionRespondPartiallyMethodExists() async throws {
-    // Simple test to verify the method signature exists
-    let provider = MockLanguageModelProvider(mockResponse: "{\"destination\": \"Japan\"}")
+@Test("LanguageModelSession respondPartially returns actual partial results")
+func testLanguageModelSessionRespondPartiallyReturnsResults() async throws {
+    // Setup streaming chunks with proper OpenAI response format
+    MockURLProtocol.shouldStream = true
+    MockURLProtocol.streamingChunks = [
+        "{\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+    ]
+    
+    defer {
+        MockURLProtocol.shouldStream = false
+        MockURLProtocol.streamingChunks = []
+    }
+    
+    let provider = MockLanguageModelProvider(mockResponse: "unused")
     let mockURLSession = provider.makeURLSession()
     var session = LanguageModelSession("test-model")
     session.provider = provider
     session.urlSession = mockURLSession
     
-    // Test that the method exists and can be called
-    let stream: AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> = session.respondPartially(to: "Generate a trip plan")
+    var partialResults: [TripPlan.PartiallyGenerated] = []
     
-    // Just verify we can create the stream without errors
-    #expect(stream.self is AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error>)
+    // Actually consume the stream and collect results
+    for try await partial in session.respondPartially(to: "Generate a trip plan") as AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> {
+        if let partial = partial {
+            partialResults.append(partial)
+            break // Get at least one result
+        }
+    }
+    
+    #expect(!partialResults.isEmpty, "Should return actual partial results")
+    #expect(partialResults.first?.destination == .japan, "Should parse destination correctly")
 }
 
 @Test("String extractPartialJSON with text fragments completes incomplete strings")
@@ -236,24 +253,36 @@ func testStringExtractPartialJSONValidatesStringTypes() {
     }
 }
 
-@Test("LanguageModelSession respondPartially with allowsTextFragment parameter")
+@Test("LanguageModelSession respondPartially with allowsTextFragment parameter actually handles fragments")
 func testLanguageModelSessionRespondPartiallyWithTextFragments() async throws {
-    // Test that the method accepts allowsTextFragment parameter
-    let provider = MockLanguageModelProvider(mockResponse: "{\"destination\": \"Japan\"}")
+    // Setup streaming chunk with proper OpenAI response format
+    MockURLProtocol.shouldStream = true
+    MockURLProtocol.streamingChunks = [
+        "{\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+    ]
+    
+    defer {
+        MockURLProtocol.shouldStream = false
+        MockURLProtocol.streamingChunks = []
+    }
+    
+    let provider = MockLanguageModelProvider(mockResponse: "unused")
     let mockURLSession = provider.makeURLSession()
     var session = LanguageModelSession("test-model")
     session.provider = provider
     session.urlSession = mockURLSession
     
+    var fragmentResults: [TripPlan.PartiallyGenerated] = []
+    
     // Test with allowsTextFragment enabled
-    let streamWithFragments: AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> = 
-        session.respondPartially(to: "Generate a trip plan", allowsTextFragment: true)
+    for try await partial in session.respondPartially(to: "Generate a trip plan", allowsTextFragment: true) as AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> {
+        if let partial = partial {
+            fragmentResults.append(partial)
+            break
+        }
+    }
     
-    // Test with allowsTextFragment disabled (default)
-    let streamWithoutFragments: AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> = 
-        session.respondPartially(to: "Generate a trip plan", allowsTextFragment: false)
-    
-    // Just verify we can create both streams
-    #expect(streamWithFragments.self is AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error>)
-    #expect(streamWithoutFragments.self is AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error>)
+    // Should be able to handle text fragments parameter and return results
+    #expect(!fragmentResults.isEmpty, "Should handle text fragments parameter and return results")
+    #expect(fragmentResults.first?.destination == .japan, "Should parse destination with text fragments enabled")
 }

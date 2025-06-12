@@ -395,15 +395,10 @@ public struct LanguageModelSession {
                         let newContent = providerResponse.contents
                         accumulator.append(newContent)
                         
-                        // Try parsing just the new content first
-                        if let partialFromNew = tryParsePartialResponse(from: newContent, allowsTextFragment: allowsTextFragment, type: T.self) {
-                            continuation.yield(partialFromNew)
-                        }
-                        
-                        // Then try with accumulated content for larger structures
+                        // Try parsing with accumulated content
                         let fullText = accumulator.joined().trimmingCharacters(in: .whitespacesAndNewlines)
-                        if let partialFromFull = tryParsePartialResponse(from: fullText, allowsTextFragment: allowsTextFragment, type: T.self) {
-                            continuation.yield(partialFromFull)
+                        if let partialResponse = tryParsePartialResponse(from: fullText, allowsTextFragment: allowsTextFragment, type: T.self) {
+                            continuation.yield(partialResponse)
                         }
                     }
                     
