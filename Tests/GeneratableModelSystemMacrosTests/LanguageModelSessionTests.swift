@@ -523,10 +523,10 @@ func testStreamingRequestsUseStreamingPayload() async throws {
 
 @Test("LanguageModelSession respondPartially actually yields partial content")
 func testRespondPartiallyYieldsContent() async throws {
-    // Reset streaming state with proper OpenAI response format
+    // Reset streaming state with proper SSE format
     MockURLProtocol.shouldStream = true
     MockURLProtocol.streamingChunks = [
-        "{\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+        "data: {\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
     ]
     
     defer {
@@ -554,12 +554,47 @@ func testRespondPartiallyYieldsContent() async throws {
     #expect(receivedPartials.first?.destination == .japan, "Should receive partial with destination Japan")
 }
 
-@Test("LanguageModelSession respondPartially with text fragments processes incremental updates")
-func testRespondPartiallyWithTextFragments() async throws {
-    // Reset streaming state with proper OpenAI response format
+@Test("LanguageModelSession respondPartially handles SSE format correctly")
+func testRespondPartiallySSEFormat() async throws {
+    // Test with SSE format (data: prefix)
     MockURLProtocol.shouldStream = true
     MockURLProtocol.streamingChunks = [
-        "{\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+        "data: {\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n",
+        "\n", // Empty line (should be skipped)
+        "data: [DONE]\n" // SSE termination (should be skipped)
+    ]
+    
+    defer {
+        MockURLProtocol.shouldStream = false
+        MockURLProtocol.streamingChunks = []
+    }
+    
+    let provider = MockLanguageModelProvider(mockResponse: "unused")
+    let mockURLSession = provider.makeURLSession()
+    var session = LanguageModelSession("test-model")
+    session.provider = provider
+    session.urlSession = mockURLSession
+    
+    var receivedPartials: [TripPlan.PartiallyGenerated] = []
+    
+    // Consume the stream and verify SSE handling
+    for try await partial in session.respondPartially(to: "Generate trip plan") as AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> {
+        if let partial = partial {
+            receivedPartials.append(partial)
+            break
+        }
+    }
+    
+    #expect(!receivedPartials.isEmpty, "Should handle SSE format correctly")
+    #expect(receivedPartials.first?.destination == .japan, "Should parse destination from SSE data")
+}
+
+@Test("LanguageModelSession respondPartially with text fragments processes incremental updates")
+func testRespondPartiallyWithTextFragments() async throws {
+    // Reset streaming state with proper SSE format
+    MockURLProtocol.shouldStream = true
+    MockURLProtocol.streamingChunks = [
+        "data: {\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
     ]
     
     defer {
@@ -585,6 +620,43 @@ func testRespondPartiallyWithTextFragments() async throws {
     
     #expect(!receivedPartials.isEmpty, "Should receive partial updates with text fragments enabled")
     #expect(receivedPartials.first?.destination == .japan, "Should parse destination correctly with text fragments")
+}
+
+@Test("LanguageModelSession respondPartially handles malformed streaming responses gracefully")
+func testRespondPartiallyMalformedResponses() async throws {
+    // Test with mix of valid and invalid streaming lines
+    MockURLProtocol.shouldStream = true
+    MockURLProtocol.streamingChunks = [
+        "data: {\"invalid json\n", // Malformed JSON (should be skipped)
+        "data: {\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n", // Valid
+        "invalid line format\n", // Invalid line (should be skipped)
+        "\n", // Empty line (should be skipped)
+        "data: [DONE]\n" // SSE termination (should be skipped)
+    ]
+    
+    defer {
+        MockURLProtocol.shouldStream = false
+        MockURLProtocol.streamingChunks = []
+    }
+    
+    let provider = MockLanguageModelProvider(mockResponse: "unused")
+    let mockURLSession = provider.makeURLSession()
+    var session = LanguageModelSession("test-model")
+    session.provider = provider
+    session.urlSession = mockURLSession
+    
+    var receivedPartials: [TripPlan.PartiallyGenerated] = []
+    
+    // Should handle malformed responses gracefully and only process valid ones
+    for try await partial in session.respondPartially(to: "Generate trip plan") as AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> {
+        if let partial = partial {
+            receivedPartials.append(partial)
+            break
+        }
+    }
+    
+    #expect(!receivedPartials.isEmpty, "Should process valid responses despite malformed ones")
+    #expect(receivedPartials.first?.destination == .japan, "Should parse valid response correctly")
 }
 
 @Test("Provider payload contains correct model and prompt")

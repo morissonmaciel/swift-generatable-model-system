@@ -244,9 +244,18 @@ public struct LanguageModelSession {
         }
 
         for try await line in bytes.lines {
-            guard let data = line.data(using: .utf8),
-                  let providerResponse = try? JSONDecoder().decode(activeProvider.api.providerResponseType, from: data) else { continue }
-            accumulator.append(providerResponse.contents)
+            guard let data = line.data(using: .utf8) else {
+                // Log data conversion error but continue processing
+                continue
+            }
+            
+            do {
+                let providerResponse = try JSONDecoder().decode(activeProvider.api.providerResponseType, from: data)
+                accumulator.append(providerResponse.contents)
+            } catch {
+                // Log JSON decode error but continue processing
+                continue
+            }
         }
         
         return accumulator
@@ -300,9 +309,18 @@ public struct LanguageModelSession {
         }
 
         for try await line in bytes.lines {
-            guard let data = line.data(using: .utf8),
-                  let providerResponse = try? JSONDecoder().decode(activeProvider.api.providerResponseType, from: data) else { continue }
-            accumulator.append(providerResponse.contents)
+            guard let data = line.data(using: .utf8) else {
+                // Log data conversion error but continue processing
+                continue
+            }
+            
+            do {
+                let providerResponse = try JSONDecoder().decode(activeProvider.api.providerResponseType, from: data)
+                accumulator.append(providerResponse.contents)
+            } catch {
+                // Log JSON decode error but continue processing
+                continue
+            }
         }
         
         let responseText = accumulator
@@ -388,17 +406,31 @@ public struct LanguageModelSession {
                         return
                     }
 
+                    var parseErrors: [Error] = []
+                    
                     for try await line in bytes.lines {
-                        guard let data = line.data(using: .utf8),
-                              let providerResponse = try? JSONDecoder().decode(activeProvider.api.providerResponseType, from: data) else { continue }
+                        // Use provider-specific preprocessing for streaming format
+                        guard let processedLine = activeProvider.api.preprocessStreamingLine(line) else { continue }
                         
-                        let newContent = providerResponse.contents
-                        accumulator.append(newContent)
+                        guard let data = processedLine.data(using: .utf8) else {
+                            parseErrors.append(LanguageModelSessionError.invalidResponseData)
+                            continue
+                        }
                         
-                        // Try parsing with accumulated content
-                        let fullText = accumulator.joined().trimmingCharacters(in: .whitespacesAndNewlines)
-                        if let partialResponse = tryParsePartialResponse(from: fullText, allowsTextFragment: allowsTextFragment, type: T.self) {
-                            continuation.yield(partialResponse)
+                        do {
+                            let providerResponse = try JSONDecoder().decode(activeProvider.api.providerResponseType, from: data)
+                            let newContent = providerResponse.contents
+                            accumulator.append(newContent)
+                            
+                            // Try parsing with accumulated content
+                            let fullText = accumulator.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+                            if let partialResponse = tryParsePartialResponse(from: fullText, allowsTextFragment: allowsTextFragment, type: T.self) {
+                                continuation.yield(partialResponse)
+                            }
+                        } catch {
+                            parseErrors.append(error)
+                            // Continue processing other lines even if one fails
+                            continue
                         }
                     }
                     

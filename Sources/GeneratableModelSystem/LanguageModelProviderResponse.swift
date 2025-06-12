@@ -72,4 +72,25 @@ extension LanguageModelProviderAPI {
             return CompatibleOpenAIProviderResponse.self
         }
     }
+    
+    /// Preprocesses a streaming response line for this provider.
+    ///
+    /// Different providers use different streaming formats (SSE, raw JSON, etc.).
+    /// This method handles provider-specific preprocessing before JSON parsing.
+    ///
+    /// - Parameter line: Raw line from the streaming response
+    /// - Returns: Preprocessed JSON string ready for parsing, or nil if line should be skipped
+    func preprocessStreamingLine(_ line: String) -> String? {
+        switch self {
+        case .openAI:
+            // Handle Server-Sent Events (SSE) format: "data: {JSON}"
+            if line.hasPrefix("data: ") {
+                let jsonPart = String(line.dropFirst(6))
+                // Skip SSE control messages
+                return jsonPart == "[DONE]" ? nil : jsonPart
+            }
+            // Skip empty lines or non-data SSE lines
+            return line.isEmpty ? nil : line
+        }
+    }
 }
