@@ -32,7 +32,8 @@ private struct MockResponse: Codable {
 }
 
 // Mock provider for testing
-struct MockLanguageModelProvider: LanguageModelProvider {
+class MockLanguageModelProvider: LanguageModelProvider {
+    // Provider properties
     var api: LanguageModelProviderAPI { _api }
     var address: URL { _address }
     var apiKey: String { _apiKey }
@@ -44,6 +45,10 @@ struct MockLanguageModelProvider: LanguageModelProvider {
     // Custom response for testing
     var mockResponse: String
     
+    // Store last request payload for verification
+    private(set) var lastStreamingValue: Bool?
+    private(set) var lastRequestBody: Data?
+    
     init(mockResponse: String = "",
          api: LanguageModelProviderAPI = .openAI,
          address: URL = URL(string: "https://api.test.com")!,
@@ -52,6 +57,30 @@ struct MockLanguageModelProvider: LanguageModelProvider {
         self._api = api
         self._address = address
         self._apiKey = apiKey
+    }
+    
+    func createStreamingPayload(modelName: String, prompt: String) throws -> Data {
+        lastStreamingValue = true
+        let payload: [String: Any] = [
+            "model": modelName,
+            "prompt": prompt,
+            "stream": true
+        ]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        lastRequestBody = data
+        return data
+    }
+    
+    func createNonStreamingPayload(modelName: String, prompt: String) throws -> Data {
+        lastStreamingValue = false
+        let payload: [String: Any] = [
+            "model": modelName,
+            "prompt": prompt,
+            "stream": false
+        ]
+        let data = try JSONSerialization.data(withJSONObject: payload)
+        lastRequestBody = data
+        return data
     }
     
     func makeURLSession() -> URLSession {
@@ -417,23 +446,22 @@ func testGenerateNoProviderError() async throws {
 func testComplexJsonExtraction() async throws {
     let complexJson = """
     {
-      "message": "A RAG system combines a large language model with an external knowledge base. Here's how it works:\\n\\n1. **Retrieval:** When a user asks a question, the system searches a knowledge base.\\n2. **Augmentation:** The retrieved information is added to the original question, effectively \\"augmenting\\" it with context.\\n3. **Generation:** The augmented query is fed to the LLM.",
-      "suggestions": [
-        "What are some common knowledge bases used in RAG systems?",
-        "How does RAG improve upon traditional LLM-based question answering?",
-        "Can you explain the different retrieval methods used in RAG systems?"
-      ],
-      "topics": [
-        "RAG System",
-        "Large Language Models",
-        "Knowledge Retrieval"
-      ]
+        "message": "A RAG system combines a large language model with an external knowledge base. Here's how it works:\\n\\n1. **Retrieval:** When a user asks a question, the system searches a knowledge base.\\n2. **Augmentation:** The retrieved information is added to the original question, effectively \\"augmenting\\" it with context.\\n3. **Generation:** The augmented query is fed to the LLM.",
+        "suggestions": [
+            "What are some common knowledge bases used in RAG systems?",
+            "How does RAG improve upon traditional LLM-based question answering?",
+            "Can you explain the different retrieval methods used in RAG systems?"
+        ],
+        "topics": [
+            "RAG System",
+            "Large Language Models",
+            "Knowledge Retrieval"
+        ]
     }
     """
     
+    // Create response with markdown wrapper
     let responseWithMarkdown = "```json\n\(complexJson)\n```"
-    
-    // Test that extractJSON correctly handles this complex case
     let extractedJSON = responseWithMarkdown.extractJSON()
     #expect(extractedJSON != nil, "Should extract JSON from markdown wrapper")
     
@@ -454,4 +482,50 @@ func testComplexJsonExtraction() async throws {
         #expect(response.topics.count == 3, "Should have correct number of topics")
         #expect(response.suggestions.count == 3, "Should have correct number of suggestions")
     }
+}
+
+@Test("Streaming requests use streaming payload")
+func testStreamingRequestsUseStreamingPayload() async throws {
+    let json = "{\"message\": \"Test Message\", \"code\": 200}"
+    let provider = MockLanguageModelProvider(mockResponse: json)
+    
+    let mockURLSession = provider.makeURLSession()
+    var session = LanguageModelSession("test-model")
+    session.provider = provider
+    session.urlSession = mockURLSession
+    
+    // Test streaming request with TripPlan which has PartiallyGenerated type
+    for try await _ in session.respondPartially(to: "test prompt") as AsyncThrowingStream<TripPlan.PartiallyGenerated?, Error> {
+        break // Just need to start the stream
+    }
+    #expect(provider.lastStreamingValue == true, "Streaming requests should use streaming payload")
+    
+    // Test non-streaming request
+    let _: TestResponse? = try await session.respond(to: "test prompt")
+    #expect(provider.lastStreamingValue == false, "Non-streaming requests should use non-streaming payload")
+    
+    // Test generate request
+    let _ = try await session.generate(to: "test prompt")
+    #expect(provider.lastStreamingValue == false, "Generate should use non-streaming payload")
+}
+
+@Test("Provider payload contains correct model and prompt")
+func testProviderPayloadContents() async throws {
+    let provider = MockLanguageModelProvider(mockResponse: "test")
+    let mockURLSession = provider.makeURLSession()
+    var session = LanguageModelSession("custom-model") {
+        "System instruction"
+    }
+    session.provider = provider
+    session.urlSession = mockURLSession
+    _ = try await session.generate(to: "User prompt")
+    
+    guard let requestBody = provider.lastRequestBody else {
+        throw LanguageModelSessionError.invalidResponseFormat("No request body captured")
+    }
+    
+    let json = try JSONSerialization.jsonObject(with: requestBody) as? [String: Any]
+    #expect(json?["model"] as? String == "custom-model", "Payload should contain correct model name")
+    #expect(json?["prompt"] as? String == "System instruction\nUser prompt", "Payload should contain combined prompt")
+    #expect(json?["stream"] as? Bool == false, "Non-streaming request should have stream: false")
 }
