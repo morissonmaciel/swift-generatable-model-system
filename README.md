@@ -1,6 +1,64 @@
 # Generatable Model System
-
 A structured and type-safe Swift library for communicating with large language models. Provides Language Model Sessions and type-safe structures whose JSON descriptions are used in prompts to ensure structured response types.
+
+## Requirements
+
+- Swift 5.9 or higher
+- macOS 14.0+ / iOS 17.0+
+- Xcode 15.0+
+
+## Installation
+
+### Swift Package Manager
+
+Add the following to your `Package.swift` file:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/morissonmaciel/swift-generatable-model-system.git", branch: "main")
+]
+```
+
+Then add the dependency to your target:
+
+```swift
+.target(
+    name: "YourTarget",
+    dependencies: ["GeneratableModelSystem"]
+)
+```
+
+## Building
+
+1. Clone the repository
+```bash
+git clone https://github.com/morissonmaciel/swift-generatable-model-system.git
+cd swift-generatable-model-system
+```
+
+2. Build the package
+```bash
+swift build
+```
+
+Note: The following files are generated during build and should not be committed:
+- `.build/` - Build artifacts
+- `.swiftpm/` - Swift Package Manager data
+- `*.xcodeproj` - Xcode project files
+- `Package.pins` - Package version pins
+
+## Running Tests
+
+Run the test suite using:
+```bash
+swift test
+```
+
+For more detailed test output:
+```bash
+swift test --verbose
+```
+
 
 ## Overview
 
@@ -316,6 +374,60 @@ struct UserProfile {
 ```
 
 **All code generation happens at compile time** with full type safety and validation.
+
+## Configuration
+
+### Setting Up Language Model Provider
+
+Before using the library, configure your language model provider:
+
+```swift
+// Create your custom provider implementing LanguageModelProvider
+class MyLanguageModelProvider: LanguageModelProvider {
+    // Implement required methods
+    func generate(prompt: String, model: String, responseType: Any.Type) async throws -> Any {
+        // Your implementation here
+    }
+}
+
+// Set as default provider (optional)
+LanguageModelSession.defaultProvider = MyLanguageModelProvider()
+```
+
+### Basic Configuration
+
+1. Import the library:
+```swift
+import GeneratableModelSystem
+import GeneratableModelSystemMacros
+```
+
+2. Create your models using the @Generatable macro:
+```swift
+@Generatable("User profile")
+struct UserProfile {
+    @GeneratableGuide("User's full name")
+    var name: String
+    
+    @GeneratableGuide("Email address")
+    var email: String
+}
+```
+
+3. Initialize a language model session:
+```swift
+let session = LanguageModelSession("gpt-4") {
+    "You are a helpful assistant that generates structured data."
+}
+```
+
+4. Generate structured responses:
+```swift
+let profile: UserProfile = try await session.generate(
+    prompt: "Generate a profile for a software developer",
+    responseType: UserProfile.self
+)
+```
 
 ## Files Structure
 
