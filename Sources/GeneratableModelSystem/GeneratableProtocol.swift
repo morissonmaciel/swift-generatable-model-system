@@ -47,7 +47,7 @@ import SwiftUI
 ///     }
 /// }
 /// ```
-public protocol GeneratableProtocol: Codable {
+public protocol GeneratableProtocol: Codable, Sendable {
     /// A human-readable description of what this type represents.
     static var description: String { get }
     

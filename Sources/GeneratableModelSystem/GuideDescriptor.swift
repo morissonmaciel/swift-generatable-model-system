@@ -52,7 +52,7 @@ import Foundation
 /// 
 /// // Creates descriptor with validValues: ["Active", "Inactive"]
 /// ```
-public struct GuideDescriptor: Codable {
+public struct GuideDescriptor: Codable, Sendable {
     /// The type name of the property (e.g., "String", "Int", "Bool").
     public var type: String
     

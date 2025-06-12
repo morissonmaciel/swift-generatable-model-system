@@ -32,7 +32,18 @@ public struct GeneratableMacro: MemberMacro, ExtensionMacro {
         // Generate CodingKeys enum if custom names are used
         let codingKeysEnum = try generateCodingKeysIfNeeded(declaration: declaration, context: context)
         
-        return codingKeysEnum.map { [DeclSyntax($0)] } ?? []
+        // Generate PartiallyGenerated nested type
+        let partiallyGeneratedStruct = try generatePartiallyGeneratedStruct(declaration: declaration, context: context)
+        
+        var members: [DeclSyntax] = []
+        if let codingKeys = codingKeysEnum {
+            members.append(DeclSyntax(codingKeys))
+        }
+        if let partialStruct = partiallyGeneratedStruct {
+            members.append(DeclSyntax(partialStruct))
+        }
+        
+        return members
     }
     
     public static func expansion(
@@ -230,7 +241,6 @@ public struct GeneratableMacro: MemberMacro, ExtensionMacro {
     
     private static func generateCodingKeysIfNeeded(declaration: some DeclGroupSyntax, context: some MacroExpansionContext) throws -> EnumDeclSyntax? {
         var codingKeyEntries: [String] = []
-        var hasCustomNames = false
         
         // Look through all members to find properties with @GeneratableGuide
         for member in declaration.memberBlock.members {
@@ -258,7 +268,6 @@ public struct GeneratableMacro: MemberMacro, ExtensionMacro {
                                let nameLiteral = secondArgument.expression.as(StringLiteralExprSyntax.self),
                                let nameValue = nameLiteral.segments.first?.as(StringSegmentSyntax.self)?.content.text {
                                 customName = nameValue
-                                hasCustomNames = true
                             }
                             
                             if let customName = customName {
@@ -286,6 +295,156 @@ public struct GeneratableMacro: MemberMacro, ExtensionMacro {
             """)
         
         return enumDecl
+    }
+    
+    private static func generatePartiallyGeneratedStruct(declaration: some DeclGroupSyntax, context: some MacroExpansionContext) throws -> StructDeclSyntax? {
+        guard let structDecl = declaration.as(StructDeclSyntax.self) else {
+            return nil
+        }
+        
+        let structName = structDecl.name.text
+        
+        var partialProperties: [String] = []
+        var partialCodingKeyEntries: [String] = []
+        var partialSchemeEntries: [String] = []
+        
+        // Extract the description from the original @Generatable attribute
+        var originalDescription = "\(structName) partially generated"
+        if let node = declaration.attributes.first(where: { attr in
+            if let attrSyntax = attr.as(AttributeSyntax.self),
+               let attrName = attrSyntax.attributeName.as(IdentifierTypeSyntax.self) {
+                return attrName.name.text == "Generatable"
+            }
+            return false
+        })?.as(AttributeSyntax.self),
+           let arguments = node.arguments?.as(LabeledExprListSyntax.self),
+           let firstArgument = arguments.first,
+           let stringLiteral = firstArgument.expression.as(StringLiteralExprSyntax.self),
+           let descriptionValue = stringLiteral.segments.first?.as(StringSegmentSyntax.self)?.content.text {
+            originalDescription = descriptionValue
+        }
+        
+        // Analyze properties with @GeneratableGuide to create optional versions
+        for member in declaration.memberBlock.members {
+            if let varDecl = member.decl.as(VariableDeclSyntax.self) {
+                for binding in varDecl.bindings {
+                    if let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier,
+                       let typeAnnotation = binding.typeAnnotation?.type {
+                        
+                        // Check if this property has @GeneratableGuide
+                        let generatableAttribute = varDecl.attributes.first { attr in
+                            if let attrSyntax = attr.as(AttributeSyntax.self),
+                               let attrName = attrSyntax.attributeName.as(IdentifierTypeSyntax.self) {
+                                return attrName.name.text == "GeneratableGuide"
+                            }
+                            return false
+                        }
+                        
+                        if let attribute = generatableAttribute?.as(AttributeSyntax.self) {
+                            // Extract custom name if provided
+                            var customName: String? = nil
+                            if let arguments = attribute.arguments?.as(LabeledExprListSyntax.self),
+                               arguments.count > 1,
+                               let secondArgument = arguments.dropFirst().first,
+                               secondArgument.label?.text == "name",
+                               let nameLiteral = secondArgument.expression.as(StringLiteralExprSyntax.self),
+                               let nameValue = nameLiteral.segments.first?.as(StringSegmentSyntax.self)?.content.text {
+                                customName = nameValue
+                            }
+                            
+                            // Make the property optional
+                            let optionalType = typeAnnotation.as(OptionalTypeSyntax.self) != nil ? typeAnnotation : "(\(typeAnnotation))?"
+                            partialProperties.append("var \(identifier.text): \(optionalType)")
+                            
+                            // Add to CodingKeys
+                            if let customName = customName {
+                                partialCodingKeyEntries.append("case \(identifier.text) = \"\(customName)\"")
+                            } else {
+                                partialCodingKeyEntries.append("case \(identifier.text)")
+                            }
+                            
+                            // Add to scheme with optional = true
+                            let entry = try generatePartialSchemeEntry(
+                                propertyName: identifier.text,
+                                propertyType: typeAnnotation,
+                                attribute: attribute,
+                                context: context
+                            )
+                            partialSchemeEntries.append(entry)
+                        }
+                    }
+                }
+            }
+        }
+        
+        guard !partialProperties.isEmpty else {
+            return nil
+        }
+        
+        let propertiesContent = partialProperties.joined(separator: "\n    ")
+        let codingKeysContent = partialCodingKeyEntries.joined(separator: "\n        ")
+        let schemeContent = partialSchemeEntries.isEmpty ? "[:]" : "[\(partialSchemeEntries.joined(separator: ", "))]"
+        
+        let partialStruct = try StructDeclSyntax("""
+            struct PartiallyGenerated: PartiallyGeneratedProtocol {
+                \(raw: propertiesContent)
+                
+                enum CodingKeys: String, CodingKey {
+                    \(raw: codingKeysContent)
+                }
+                
+                static var parentType: any GeneratableProtocol.Type {
+                    \(raw: structName).self
+                }
+                
+                static var description: String {
+                    \(literal: originalDescription)
+                }
+                
+                static var scheme: [String: GuideDescriptor] {
+                    \(raw: schemeContent)
+                }
+            }
+            """)
+        return partialStruct
+    }
+    
+    private static func generatePartialSchemeEntry(
+        propertyName: String,
+        propertyType: TypeSyntax,
+        attribute: AttributeSyntax,
+        context: some MacroExpansionContext
+    ) throws -> String {
+        
+        // Extract description from @GeneratableGuide
+        guard let arguments = attribute.arguments?.as(LabeledExprListSyntax.self),
+              let firstArgument = arguments.first,
+              let descriptionLiteral = firstArgument.expression.as(StringLiteralExprSyntax.self),
+              let description = descriptionLiteral.segments.first?.as(StringSegmentSyntax.self)?.content.text else {
+            throw DiagnosticsError(diagnostics: [
+                Diagnostic(node: attribute, message: GeneratableDiagnostic.missingDescription)
+            ])
+        }
+        
+        // Extract custom name if provided
+        var customName: String? = nil
+        if arguments.count > 1,
+           let secondArgument = arguments.dropFirst().first,
+           secondArgument.label?.text == "name",
+           let nameLiteral = secondArgument.expression.as(StringLiteralExprSyntax.self),
+           let nameValue = nameLiteral.segments.first?.as(StringSegmentSyntax.self)?.content.text {
+            customName = nameValue
+        }
+        
+        let keyName = customName ?? propertyName
+        let (_, jsonType, _, validValues) = try analyzePropertyType(propertyType, context: context)
+        
+        let validValuesParam = validValues.map { values in
+            ", validValues: [\(values.map { "\"\($0)\"" }.joined(separator: ", "))]"
+        } ?? ""
+        
+        // Always mark as optional for partial generation
+        return "\"\(keyName)\": GuideDescriptor(type: \"\(jsonType)\", description: \"\(description)\", isOptional: true\(validValuesParam))"
     }
 }
 

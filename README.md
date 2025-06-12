@@ -202,7 +202,68 @@ let rawText: String = try await session.generate(to: "Tell me a joke")
 // ✨ Zero boilerplate - the macro handles everything!
 ```
 
-### Level 6: Complex Nested Structures
+### Level 6: Streaming Partial Generation
+
+The `@Generatable` macro automatically generates a `PartiallyGenerated` type for each struct, enabling real-time streaming updates:
+
+```swift
+@Generatable("Trip planning information")
+struct TripPlan {
+    @GeneratableGuide("Destination country")
+    var destination: String
+    
+    @GeneratableGuide("List of planned activities")
+    var activities: [String]
+    
+    @GeneratableGuide("Trip duration in days")
+    var duration: Int
+}
+
+// ✨ The macro automatically generates TripPlan.PartiallyGenerated:
+// struct PartiallyGenerated: PartiallyGeneratedProtocol {
+//     var destination: String?      // All @GeneratableGuide properties become optional
+//     var activities: [String]?
+//     var duration: Int?
+// }
+
+// Stream partial updates as they're generated
+for await partialPlan in session.respondPartially(to: "Create a detailed trip plan for Japan") {
+    if let plan = partialPlan as TripPlan.PartiallyGenerated? {
+        // Handle incremental updates in real-time
+        if let destination = plan.destination {
+            print("🌍 Destination: \(destination)")
+        }
+        if let activities = plan.activities, !activities.isEmpty {
+            print("🎯 Activities so far: \(activities.joined(separator: ", "))")
+        }
+        if let duration = plan.duration {
+            print("📅 Duration: \(duration) days")
+        }
+    }
+}
+
+// Enable text fragment streaming for even more granular updates
+for await partialPlan in session.respondPartially(to: "Create a trip plan", allowsTextFragment: true) {
+    if let plan = partialPlan as TripPlan.PartiallyGenerated? {
+        // Now you can see text as it's being generated character by character
+        if let destination = plan.destination {
+            print("🌍 Destination: \(destination)") // Shows "J" → "Ja" → "Jap" → "Japan"
+        }
+    }
+}
+```
+
+**Partial Generation Features:**
+- ✅ **Real-time streaming** - Get updates as the LLM generates content
+- ✅ **Type safety** - Partial types maintain full compile-time checking
+- ✅ **Optional properties** - All `@GeneratableGuide` fields become optional
+- ✅ **Automatic generation** - Zero additional code required
+- ✅ **Incremental parsing** - Handles incomplete JSON gracefully
+- ✅ **Text fragment streaming** - See text being generated character by character with `allowsTextFragment: true`
+- ✅ **Type validation** - Text fragments only applied to String-type properties
+- ✅ **AsyncStream support** - Full Swift concurrency integration
+
+### Level 7: Complex Nested Structures
 
 ```swift
 @Generatable("Complete travel booking request")
@@ -376,7 +437,7 @@ let rawResponse: String = try await session.generate(to: "Tell me about Swift pr
 
 ## LanguageModelSession API
 
-The `LanguageModelSession` provides two main methods for interacting with language models:
+The `LanguageModelSession` provides three main methods for interacting with language models:
 
 ### respond(to:) - Structured JSON Response
 
@@ -397,6 +458,48 @@ let response: UserProfile = try await session.respond {
 - ✅ Strong typing with compile-time safety
 - ✅ Automatic Codable decoding to your struct
 - ✅ Throws `LanguageModelSessionError` on parsing failures
+
+### respondPartially(to:) - Streaming Partial Response
+
+Returns an AsyncStream of partial responses as they're generated:
+
+```swift
+// Stream partial updates
+for await partialResponse in session.respondPartially(to: "Generate a trip plan") {
+    if let plan = partialResponse as TripPlan.PartiallyGenerated? {
+        // Handle real-time updates
+        if let destination = plan.destination {
+            print("Destination updated: \(destination)")
+        }
+    }
+}
+
+// Enable text fragment streaming for character-by-character updates
+for await partialResponse in session.respondPartially(to: "Generate a trip plan", allowsTextFragment: true) {
+    if let plan = partialResponse as TripPlan.PartiallyGenerated? {
+        // See text being generated in real-time: "J" → "Ja" → "Jap" → "Japan"
+        if let destination = plan.destination {
+            print("Destination: \(destination)")
+        }
+    }
+}
+
+// With PromptBuilder
+for await partialResponse in session.respondPartially(allowsTextFragment: true) {
+    "Generate a detailed trip plan for \(destination) with \(activities.count) activities"
+} {
+    // Handle streaming updates with text fragments
+}
+```
+
+**Features:**
+- ✅ Real-time streaming of partial responses
+- ✅ Type-safe partial generation with optional properties
+- ✅ **Text fragment streaming** with `allowsTextFragment: true` parameter
+- ✅ **Character-by-character updates** for String properties only
+- ✅ AsyncStream integration for Swift concurrency
+- ✅ Incremental JSON parsing for incomplete data
+- ✅ Same error handling and provider support
 
 ### generate(to:) - Raw Text Response
 
@@ -420,7 +523,7 @@ let rawText: String = try await session.generate {
 
 ### Provider and URLSession Configuration
 
-Both methods support flexible configuration:
+All methods support flexible configuration:
 
 ```swift
 var session = LanguageModelSession("model-name")
@@ -444,7 +547,7 @@ session.provider = myProvider  // Instance-specific provider
 
 ### Error Handling
 
-Both methods throw `LanguageModelSessionError`:
+All methods throw `LanguageModelSessionError`:
 
 ```swift
 do {
