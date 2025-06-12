@@ -1,4 +1,4 @@
-# Generatable Model System
+# swift-generatable-model-system.
 A structured and type-safe Swift library for communicating with large language models. Provides Language Model Sessions and type-safe structures whose JSON descriptions are used in prompts to ensure structured response types.
 
 ## Overview
@@ -33,8 +33,11 @@ Then add the dependency to your target:
 
 ```swift
 .target(
-    name: "YourTarget",
-    dependencies: ["GeneratableModelSystem"]
+    name: "MyTarget",
+    dependencies: [
+        .product(name: "GeneratableModelSystem", package: "swift-generatable-model-system"),
+        .product(name: "GeneratableModelSystemMacros", package: "swift-generatable-model-system")
+    ]
 )
 ```
 
