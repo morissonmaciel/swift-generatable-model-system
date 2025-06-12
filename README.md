@@ -301,80 +301,6 @@ struct Example {
 }
 ```
 
-## ManualSchemaBuilder API
-
-### Adding Properties
-
-```swift
-// Required property
-builder.addProperty("name", type: String.self, description: "Property description")
-
-// Optional property  
-builder.addOptionalProperty("age", wrappedType: Int.self, description: "Optional age")
-
-// Array property
-builder.addArrayProperty("tags", itemType: String.self, description: "List of tags")
-
-// Set overall description
-builder.setDescription("Overall model description")
-```
-
-### Building Schema
-
-```swift
-let schema = builder.build()
-// Returns: [String: Any] dictionary in JSON Schema format
-```
-
-## Integration with Existing Models
-
-The system integrates with existing codebase models:
-
-```swift
-// ChatRole enum
-extension ChatRole: GeneratableModel {
-    static func generateSchema() -> [String: Any] {
-        return SchemaGenerator.schemaForEnum(
-            cases: ["user", "assistant", "system", "tool"],
-            description: "Chat message role"
-        )
-    }
-}
-
-// StructuredChatResponse struct  
-extension StructuredChatResponse: GeneratableModel {
-    static func generateSchema() -> [String: Any] {
-        // Uses ManualSchemaBuilder for complex structures
-    }
-}
-```
-
-## ✨ Production-Ready Swift Macro Implementation
-
-The system now uses **true Swift macros** for automatic code generation:
-
-```swift
-@Generatable("User profile information")
-struct UserProfile {
-    var id: UUID = UUID()  // Auto-generated, excluded from schema
-    
-    @GeneratableGuide("Full name of the user")
-    var name: String
-    
-    @GeneratableGuide("Email address")
-    var email: String
-}
-
-// ✨ The macro automatically generates:
-// - GeneratableProtocol conformance
-// - Codable conformance  
-// - CodingKeys enum (when needed)
-// - JSON Schema generation
-// - Compile-time validation
-```
-
-**All code generation happens at compile time** with full type safety and validation.
-
 ## Configuration
 
 ### Setting Up Language Model Provider
@@ -428,6 +354,80 @@ let profile: UserProfile = try await session.generate(
     responseType: UserProfile.self
 )
 ```
+
+## ManualSchemaBuilder API
+
+### Adding Properties
+
+```swift
+// Required property
+builder.addProperty("name", type: String.self, description: "Property description")
+
+// Optional property
+builder.addOptionalProperty("age", wrappedType: Int.self, description: "Optional age")
+
+// Array property
+builder.addArrayProperty("tags", itemType: String.self, description: "List of tags")
+
+// Set overall description
+builder.setDescription("Overall model description")
+```
+
+### Building Schema
+
+```swift
+let schema = builder.build()
+// Returns: [String: Any] dictionary in JSON Schema format
+```
+
+## Integration with Existing Models
+
+The system integrates with existing codebase models:
+
+```swift
+// ChatRole enum
+extension ChatRole: GeneratableModel {
+    static func generateSchema() -> [String: Any] {
+        return SchemaGenerator.schemaForEnum(
+            cases: ["user", "assistant", "system", "tool"],
+            description: "Chat message role"
+        )
+    }
+}
+
+// StructuredChatResponse struct
+extension StructuredChatResponse: GeneratableModel {
+    static func generateSchema() -> [String: Any] {
+        // Uses ManualSchemaBuilder for complex structures
+    }
+}
+```
+
+## ✨ Production-Ready Swift Macro Implementation
+
+The system now uses **true Swift macros** for automatic code generation:
+
+```swift
+@Generatable("User profile information")
+struct UserProfile {
+    var id: UUID = UUID()  // Auto-generated, excluded from schema
+    
+    @GeneratableGuide("Full name of the user")
+    var name: String
+    
+    @GeneratableGuide("Email address")
+    var email: String
+}
+
+// ✨ The macro automatically generates:
+// - GeneratableProtocol conformance
+// - Codable conformance
+// - CodingKeys enum (when needed)
+// - JSON Schema generation
+// - Compile-time validation
+```
+
+**All code generation happens at compile time** with full type safety and validation.
 
 ## Files Structure
 
