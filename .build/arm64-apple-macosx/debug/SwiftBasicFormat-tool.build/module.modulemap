@@ -1,4 +1,0 @@
-module SwiftBasicFormat {
-    header "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/SwiftBasicFormat-tool.build/SwiftBasicFormat-Swift.h"
-    requires objc
-}

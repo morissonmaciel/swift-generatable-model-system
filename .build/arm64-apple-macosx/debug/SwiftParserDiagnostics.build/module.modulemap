@@ -1,4 +1,0 @@
-module SwiftParserDiagnostics {
-    header "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/SwiftParserDiagnostics.build/SwiftParserDiagnostics-Swift.h"
-    requires objc
-}

@@ -1,4 +1,0 @@
-module GeneratableModelSystemMacros {
-    header "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacros.build/GeneratableModelSystemMacros-Swift.h"
-    requires objc
-}

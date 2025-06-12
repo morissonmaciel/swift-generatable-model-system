@@ -1,4 +1,0 @@
-module SwiftIDEUtils {
-    header "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/SwiftIDEUtils.build/SwiftIDEUtils-Swift.h"
-    requires objc
-}

@@ -1,4 +1,0 @@
-module TestingInternals {
-    umbrella "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-testing/Sources/TestingInternals/include"
-    export *
-}
