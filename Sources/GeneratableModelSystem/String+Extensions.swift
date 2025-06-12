@@ -157,14 +157,29 @@ extension String {
                 }
                 
                 // Try to validate current JSON periodically at key boundaries
-                if !inString && (char == "," || char == "}") && braceCount > 0 {
-                    // Try to make current JSON valid by closing remaining braces
-                    let closingBraces = String(repeating: "}", count: braceCount)
-                    let potentialJSON = currentJSON + closingBraces
+                // Try to extract valid JSON more aggressively at property boundaries
+                if !inString && (char == "," || char == ":" || char == "}" || char == "]") && braceCount > 0 {
+                    // Try to make current JSON valid by closing remaining structures
+                    var potentialJSON = currentJSON
                     
+                    // Close any open arrays
+                    let openBrackets = potentialJSON.filter { $0 == "[" }.count
+                    let closedBrackets = potentialJSON.filter { $0 == "]" }.count
+                    if openBrackets > closedBrackets {
+                        potentialJSON += String(repeating: "]", count: openBrackets - closedBrackets)
+                    }
+                    
+                    // Close any open objects
+                    let closingBraces = String(repeating: "}", count: braceCount)
+                    potentialJSON += closingBraces
+                    
+                    // Try to validate the JSON
                     if let data = potentialJSON.data(using: .utf8),
                        let _ = try? JSONSerialization.jsonObject(with: data) {
-                        lastValidJSON = potentialJSON
+                        // Only update if we have more content
+                        if potentialJSON.count > lastValidJSON.count {
+                            lastValidJSON = potentialJSON
+                        }
                     }
                 }
             }

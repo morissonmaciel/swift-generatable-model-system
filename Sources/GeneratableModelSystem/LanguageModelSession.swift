@@ -396,21 +396,18 @@ public struct LanguageModelSession {
                         guard let data = line.data(using: .utf8),
                               let providerResponse = try? JSONDecoder().decode(activeProvider.api.providerResponseType, from: data) else { continue }
                         
-                        accumulator.append(providerResponse.contents)
+                        let newContent = providerResponse.contents
+                        accumulator.append(newContent)
                         
-                        let responseText = accumulator
-                            .joined()
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        // Try parsing just the new content first
+                        if let partialFromNew = tryParsePartialResponse(from: newContent, allowsTextFragment: allowsTextFragment, type: T.self) {
+                            continuation.yield(partialFromNew)
+                        }
                         
-                        // Try to extract partial JSON and decode it
-                        let extractedJSON = allowsTextFragment ? 
-                            responseText.extractPartialJSON(allowsTextFragment: true, scheme: T.scheme) :
-                            responseText.extractPartialJSON()
-                        
-                        if let jsonString = extractedJSON,
-                           let jsonData = jsonString.data(using: .utf8),
-                           let partialResponse = try? JSONDecoder().decode(T.self, from: jsonData) {
-                            continuation.yield(partialResponse)
+                        // Then try with accumulated content for larger structures
+                        let fullText = accumulator.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+                        if let partialFromFull = tryParsePartialResponse(from: fullText, allowsTextFragment: allowsTextFragment, type: T.self) {
+                            continuation.yield(partialFromFull)
                         }
                     }
                     
@@ -456,5 +453,20 @@ public struct LanguageModelSession {
     /// ```
     public func respondPartially<T: PartiallyGeneratedProtocol>(to input: String, allowsTextFragment: Bool = false) -> AsyncThrowingStream<T?, Error> {
         return self.respondPartially(to: { input }, allowsTextFragment: allowsTextFragment)
+    }
+    
+    /// Helper method to attempt parsing a partial response from text
+    private func tryParsePartialResponse<T: PartiallyGeneratedProtocol>(from text: String, allowsTextFragment: Bool, type: T.Type) -> T? {
+        let extractedJSON = allowsTextFragment ?
+            text.extractPartialJSON(allowsTextFragment: true, scheme: T.scheme) :
+            text.extractPartialJSON()
+        
+        guard let jsonString = extractedJSON,
+              let jsonData = jsonString.data(using: .utf8),
+              let partialResponse = try? JSONDecoder().decode(T.self, from: jsonData) else {
+            return nil
+        }
+        
+        return partialResponse
     }
 }
