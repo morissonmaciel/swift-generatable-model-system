@@ -84,11 +84,11 @@ public struct LanguageModelSession {
         return try? JSONSerialization.data(withJSONObject: payload)
     }
     
-    func respond<T: GeneratableProtocol>(to input: String) async throws -> T? {
+    public func respond<T: GeneratableProtocol>(to input: String) async throws -> T? {
         try await self.respond(to: { input })
     }
     
-    func respond<T: GeneratableProtocol>(@PromptBuilder to inputBuilder: () -> String) async throws -> T? {
+    public func respond<T: GeneratableProtocol>(@PromptBuilder to inputBuilder: () -> String) async throws -> T? {
         var request = buildRequest(for: provider.address.absoluteString, with: provider.api.pathComponents)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
