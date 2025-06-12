@@ -1,11 +1,21 @@
 # Generatable Model System
 A structured and type-safe Swift library for communicating with large language models. Provides Language Model Sessions and type-safe structures whose JSON descriptions are used in prompts to ensure structured response types.
 
-## Requirements
+## Overview
 
-- Swift 5.9 or higher
-- macOS 14.0+ / iOS 17.0+
-- Xcode 15.0+
+This library enables type-safe communication with large language models by:
+
+- **Structured Language Model Sessions** - Type-safe session management for LLM interactions
+- **Generatable Models** - Swift types that automatically generate JSON Schema descriptions
+- **Type Safety** - Compile-time guarantees for LLM request/response structures
+- **JSON Schema Generation** - Automatic conversion of Swift types to JSON Schema for prompt engineering
+
+### Core Components
+
+- `@Generatable` - Macro that automatically generates GeneratableProtocol conformance, Codable support, and JSON Schema
+- `@GeneratableGuide` - Marks properties for inclusion in schema with descriptions and custom names
+- `LanguageModelSession` - Structured session management for LLM communications with default provider support
+- `LanguageModelProvider` - Abstraction layer for different LLM providers
 
 ## Installation
 
@@ -27,6 +37,12 @@ Then add the dependency to your target:
     dependencies: ["GeneratableModelSystem"]
 )
 ```
+
+## Requirements
+
+- Swift 5.9 or higher
+- macOS 14.0+ / iOS 17.0+
+- Xcode 15.0+
 
 ## Building
 
@@ -59,22 +75,6 @@ For more detailed test output:
 swift test --verbose
 ```
 
-
-## Overview
-
-This library enables type-safe communication with large language models by:
-
-- **Structured Language Model Sessions** - Type-safe session management for LLM interactions
-- **Generatable Models** - Swift types that automatically generate JSON Schema descriptions
-- **Type Safety** - Compile-time guarantees for LLM request/response structures
-- **JSON Schema Generation** - Automatic conversion of Swift types to JSON Schema for prompt engineering
-
-### Core Components
-
-- `@Generatable` - Macro that automatically generates GeneratableProtocol conformance, Codable support, and JSON Schema
-- `@GeneratableGuide` - Marks properties for inclusion in schema with descriptions and custom names
-- `LanguageModelSession` - Structured session management for LLM communications with default provider support
-- `LanguageModelProvider` - Abstraction layer for different LLM providers
 
 ## Usage
 
