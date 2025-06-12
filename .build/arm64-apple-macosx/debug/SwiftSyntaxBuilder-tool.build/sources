@@ -1,0 +1,14 @@
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/ConvenienceInitializers.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/DeclSyntaxParseable.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/Indenter.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/ResultBuilderExtensions.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/SwiftSyntaxBuilderCompatibility.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/Syntax+StringInterpolation.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/SyntaxNodeWithBody.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/SyntaxParsable+ExpressibleByStringInterpolation.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/ValidatingSyntaxNodes.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/WithTrailingCommaSyntax+EnsuringTrailingComma.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/generated/BuildableNodes.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/generated/RenamedChildrenBuilderCompatibility.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/generated/ResultBuilders.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/checkouts/swift-syntax/Sources/SwiftSyntaxBuilder/generated/SyntaxExpressibleByStringInterpolationConformances.swift

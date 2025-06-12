@@ -1,0 +1,47 @@
+{
+  "": {
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/master.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Tests/GeneratableModelSystemMacrosTests/GeneratableMacroTests.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GeneratableMacroTests.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GeneratableMacroTests.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GeneratableMacroTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GeneratableMacroTests.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Tests/GeneratableModelSystemMacrosTests/GeneratableProtocolTests.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GeneratableProtocolTests.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GeneratableProtocolTests.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GeneratableProtocolTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GeneratableProtocolTests.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Tests/GeneratableModelSystemMacrosTests/GuideDescriptorTests.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GuideDescriptorTests.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GuideDescriptorTests.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GuideDescriptorTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/GuideDescriptorTests.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Tests/GeneratableModelSystemMacrosTests/JSONDescriptionTests.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/JSONDescriptionTests.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/JSONDescriptionTests.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/JSONDescriptionTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/JSONDescriptionTests.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Tests/GeneratableModelSystemMacrosTests/LanguageModelSessionTests.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/LanguageModelSessionTests.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/LanguageModelSessionTests.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/LanguageModelSessionTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/LanguageModelSessionTests.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Tests/GeneratableModelSystemMacrosTests/LanguageModelTests.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/LanguageModelTests.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/LanguageModelTests.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/LanguageModelTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/LanguageModelTests.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Tests/GeneratableModelSystemMacrosTests/TestModels.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/TestModels.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/TestModels.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/TestModels~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosTests.build/TestModels.swiftdeps"
+  }
+}

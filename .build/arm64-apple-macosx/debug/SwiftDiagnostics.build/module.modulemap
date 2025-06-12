@@ -1,0 +1,4 @@
+module SwiftDiagnostics {
+    header "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/SwiftDiagnostics.build/SwiftDiagnostics-Swift.h"
+    requires objc
+}

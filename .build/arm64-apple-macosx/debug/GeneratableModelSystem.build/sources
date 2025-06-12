@@ -1,0 +1,7 @@
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/GeneratableProtocol.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/GuideDescriptor.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/LanguageModel.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/LanguageModelProvider.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/LanguageModelProviderResponse.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/LanguageModelSession.swift
+/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/PromptBuilder.swift

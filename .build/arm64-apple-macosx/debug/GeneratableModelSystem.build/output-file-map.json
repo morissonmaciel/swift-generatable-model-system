@@ -1,0 +1,47 @@
+{
+  "": {
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/master.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/GeneratableProtocol.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GeneratableProtocol.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GeneratableProtocol.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GeneratableProtocol~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GeneratableProtocol.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/GuideDescriptor.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GuideDescriptor.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GuideDescriptor.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GuideDescriptor~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GuideDescriptor.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/LanguageModel.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModel.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModel.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModel.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/LanguageModelProvider.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelProvider.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelProvider.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelProvider~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelProvider.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/LanguageModelProviderResponse.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelProviderResponse.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelProviderResponse.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelProviderResponse~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelProviderResponse.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/LanguageModelSession.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelSession.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelSession.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelSession~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/LanguageModelSession.swiftdeps"
+  },
+  "/Users/morissonmaciel/GitHub/swift-generatable-model-system/Sources/GeneratableModelSystem/PromptBuilder.swift": {
+    "dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/PromptBuilder.d",
+    "object": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/PromptBuilder.swift.o",
+    "swiftmodule": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/PromptBuilder~partial.swiftmodule",
+    "swift-dependencies": "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/PromptBuilder.swiftdeps"
+  }
+}

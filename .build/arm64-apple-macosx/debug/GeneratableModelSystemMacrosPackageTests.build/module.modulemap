@@ -1,0 +1,4 @@
+module GeneratableModelSystemMacrosPackageTests {
+    header "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystemMacrosPackageTests.build/GeneratableModelSystemMacrosPackageTests-Swift.h"
+    requires objc
+}

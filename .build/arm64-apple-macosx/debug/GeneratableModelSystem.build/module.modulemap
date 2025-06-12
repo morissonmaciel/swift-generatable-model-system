@@ -1,0 +1,4 @@
+module GeneratableModelSystem {
+    header "/Users/morissonmaciel/GitHub/swift-generatable-model-system/.build/arm64-apple-macosx/debug/GeneratableModelSystem.build/GeneratableModelSystem-Swift.h"
+    requires objc
+}
