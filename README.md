@@ -204,7 +204,12 @@ let rawText: String = try await session.generate(to: "Tell me a joke")
 
 ### Level 6: Streaming Partial Generation
 
-The `@Generatable` macro automatically generates a `PartiallyGenerated` type for each struct, enabling real-time streaming updates:
+The `@Generatable` macro automatically generates a `PartiallyGenerated` type for each struct, enabling real-time streaming updates. Note that streaming requires proper configuration of your provider's payload methods:
+
+**Important Streaming Notes:**
+- Streaming is automatically enabled when using `respondPartially` methods through the provider's `createStreamingPayload`
+- Enable `allowsTextFragment: true` for more frequent updates with array properties
+- Provider must configure `stream: true` in streaming payload for proper functionality
 
 ```swift
 @Generatable("Trip planning information")
@@ -384,6 +389,16 @@ class MyLanguageModelProvider: LanguageModelProvider {
     var address: URL { URL(string: "https://api.openai.com")! }
     var apiKey: String { "your-api-key" }
     
+    // Create payload for streaming requests (with stream: true)
+    func createStreamingPayload(model: String, prompt: String) -> [String: Any] {
+        ["model": model, "prompt": prompt, "stream": true]
+    }
+    
+    // Create payload for non-streaming requests
+    func createNonStreamingPayload(model: String, prompt: String) -> [String: Any] {
+        ["model": model, "prompt": prompt]
+    }
+    
     // Optional: Custom URLSession factory
     func makeURLSession() -> URLSession {
         return URLSession.shared
@@ -394,6 +409,36 @@ class MyLanguageModelProvider: LanguageModelProvider {
 LanguageModelSession.defaultProvider = MyLanguageModelProvider()
 LanguageModelSession.defaultURLSession = customURLSession // Optional
 ```
+
+### Provider Implementation
+
+The LanguageModelProvider protocol requires implementing payload creation methods for both streaming and non-streaming requests:
+
+1. **Streaming Payload Configuration**
+   - Required for `respondPartially` methods
+   - Must include `stream: true` in payload
+   - Enables real-time updates and text fragments
+
+```swift
+func createStreamingPayload(model: String, prompt: String) -> [String: Any] {
+    ["model": model, "prompt": prompt, "stream": true]
+}
+```
+
+2. **Non-Streaming Payload Configuration**
+   - Used for standard `respond` and `generate` methods
+   - Standard completion request format
+
+```swift
+func createNonStreamingPayload(model: String, prompt: String) -> [String: Any] {
+    ["model": model, "prompt": prompt]
+}
+```
+
+Providers are responsible for:
+- Creating appropriate request payloads for streaming/non-streaming
+- Configuring streaming settings through payload methods
+- Managing API-specific parameters and formats
 
 ### Basic Configuration
 

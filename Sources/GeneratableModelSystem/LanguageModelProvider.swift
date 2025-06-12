@@ -48,6 +48,20 @@ public protocol LanguageModelProvider {
     
     /// The API key or token for authentication.
     var apiKey: String { get }
+    
+    /// Creates a request payload for streaming requests.
+    /// - Parameters:
+    ///   - modelName: The name of the model to use
+    ///   - prompt: The prompt text to send
+    /// - Returns: JSON data for the request body with streaming enabled
+    func createStreamingPayload(modelName: String, prompt: String) throws -> Data
+    
+    /// Creates a request payload for non-streaming requests.
+    /// - Parameters:
+    ///   - modelName: The name of the model to use
+    ///   - prompt: The prompt text to send
+    /// - Returns: JSON data for the request body with streaming disabled
+    func createNonStreamingPayload(modelName: String, prompt: String) throws -> Data
 }
 
 /// API path components for language model providers.
@@ -70,6 +84,44 @@ public extension LanguageModelProviderAPI {
         switch self {
         case .openAI:
             return .init(api: "/v1", generate: "/completions")
+        }
+    }
+}
+
+// MARK: - Default Implementation
+
+public extension LanguageModelProvider {
+    /// Default implementation for streaming payload creation.
+    func createStreamingPayload(modelName: String, prompt: String) throws -> Data {
+        switch api {
+        case .openAI:
+            let payload: [String: Any] = [
+                "model": modelName,
+                "prompt": prompt,
+                "stream": true
+            ]
+            do {
+                return try JSONSerialization.data(withJSONObject: payload)
+            } catch {
+                throw error
+            }
+        }
+    }
+    
+    /// Default implementation for non-streaming payload creation.
+    func createNonStreamingPayload(modelName: String, prompt: String) throws -> Data {
+        switch api {
+        case .openAI:
+            let payload: [String: Any] = [
+                "model": modelName,
+                "prompt": prompt,
+                "stream": false
+            ]
+            do {
+                return try JSONSerialization.data(withJSONObject: payload)
+            } catch {
+                throw error
+            }
         }
     }
 }

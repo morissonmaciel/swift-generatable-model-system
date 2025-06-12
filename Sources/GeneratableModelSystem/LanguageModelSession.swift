@@ -156,15 +156,11 @@ public struct LanguageModelSession {
         return request
     }
     
-    private func buildRequestBody(with input: String, for api: LanguageModelProviderAPI) -> Data? {
+    private func buildRequestBody(with input: String, for provider: LanguageModelProvider, streaming: Bool) throws -> Data {
         let finalPrompt = [instructions, input].joined(separator: "\n")
-        
-        let payload: [String: Codable] =
-            switch api {
-            case .openAI: ["model": model.name, "prompt": finalPrompt]
-            }
-        
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return try streaming ?
+            provider.createStreamingPayload(modelName: model.name, prompt: finalPrompt) :
+            provider.createNonStreamingPayload(modelName: model.name, prompt: finalPrompt)
     }
     
     /// Generates a structured response by parsing JSON from the language model output.
@@ -236,7 +232,7 @@ public struct LanguageModelSession {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(activeProvider.apiKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = buildRequestBody(with: inputBuilder(), for: activeProvider.api)
+        request.httpBody = try buildRequestBody(with: inputBuilder(), for: activeProvider, streaming: false)
         
         let (bytes, response) = try await activeURLSession.bytes(for: request)
         var accumulator: [String] = []
@@ -292,7 +288,7 @@ public struct LanguageModelSession {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(activeProvider.apiKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = buildRequestBody(with: inputBuilder(), for: activeProvider.api)
+        request.httpBody = try buildRequestBody(with: inputBuilder(), for: activeProvider, streaming: false)
         
         let (bytes, response) = try await activeURLSession.bytes(for: request)
         var accumulator: [String] = []
@@ -380,7 +376,7 @@ public struct LanguageModelSession {
                     request.httpMethod = "POST"
                     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
                     request.setValue("Bearer \(activeProvider.apiKey)", forHTTPHeaderField: "Authorization")
-                    request.httpBody = buildRequestBody(with: input, for: activeProvider.api)
+                    request.httpBody = try buildRequestBody(with: input, for: activeProvider, streaming: true)
                     
                     let (bytes, response) = try await activeURLSession.bytes(for: request)
                     var accumulator: [String] = []
