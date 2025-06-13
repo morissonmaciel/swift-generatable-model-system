@@ -159,10 +159,10 @@ func testStringExtractPartialJSONValidObjects() {
 
 @Test("LanguageModelSession respondPartially returns actual partial results")
 func testLanguageModelSessionRespondPartiallyReturnsResults() async throws {
-    // Setup streaming chunks with proper OpenAI response format
+    // Setup streaming chunks with proper OpenAI streaming format (no usage field)
     MockURLProtocol.shouldStream = true
     MockURLProtocol.streamingChunks = [
-        "{\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+        "data: {\"model\":\"test\",\"created\":1623456789,\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
     ]
     
     defer {
@@ -255,10 +255,10 @@ func testStringExtractPartialJSONValidatesStringTypes() {
 
 @Test("LanguageModelSession respondPartially with allowsTextFragment parameter actually handles fragments")
 func testLanguageModelSessionRespondPartiallyWithTextFragments() async throws {
-    // Setup streaming chunk with proper OpenAI response format
+    // Setup streaming chunk with proper OpenAI streaming format (no usage field)
     MockURLProtocol.shouldStream = true
     MockURLProtocol.streamingChunks = [
-        "{\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+        "data: {\"model\":\"test\",\"created\":1623456789,\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
     ]
     
     defer {

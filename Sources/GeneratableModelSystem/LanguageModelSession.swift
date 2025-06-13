@@ -434,6 +434,14 @@ public struct LanguageModelSession {
                         }
                     }
                     
+                    // Print parse errors for observability
+                    if !parseErrors.isEmpty {
+                        print("LanguageModelSession: Encountered \(parseErrors.count) parse errors during streaming:")
+                        for (index, error) in parseErrors.enumerated() {
+                            print("  Error \(index + 1): \(error)")
+                        }
+                    }
+                    
                     // Final attempt with complete response
                     let responseText = accumulator
                         .joined()

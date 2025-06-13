@@ -523,10 +523,10 @@ func testStreamingRequestsUseStreamingPayload() async throws {
 
 @Test("LanguageModelSession respondPartially actually yields partial content")
 func testRespondPartiallyYieldsContent() async throws {
-    // Reset streaming state with proper SSE format
+    // Reset streaming state with proper SSE format (no usage field for streaming)
     MockURLProtocol.shouldStream = true
     MockURLProtocol.streamingChunks = [
-        "data: {\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+        "data: {\"model\":\"test\",\"created\":1623456789,\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
     ]
     
     defer {
@@ -556,10 +556,10 @@ func testRespondPartiallyYieldsContent() async throws {
 
 @Test("LanguageModelSession respondPartially handles SSE format correctly")
 func testRespondPartiallySSEFormat() async throws {
-    // Test with SSE format (data: prefix)
+    // Test with SSE format (data: prefix) - streaming responses typically don't include usage
     MockURLProtocol.shouldStream = true
     MockURLProtocol.streamingChunks = [
-        "data: {\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n",
+        "data: {\"model\":\"test\",\"created\":1623456789,\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n",
         "\n", // Empty line (should be skipped)
         "data: [DONE]\n" // SSE termination (should be skipped)
     ]
@@ -591,10 +591,10 @@ func testRespondPartiallySSEFormat() async throws {
 
 @Test("LanguageModelSession respondPartially with text fragments processes incremental updates")
 func testRespondPartiallyWithTextFragments() async throws {
-    // Reset streaming state with proper SSE format
+    // Reset streaming state with proper SSE format (no usage for streaming)
     MockURLProtocol.shouldStream = true
     MockURLProtocol.streamingChunks = [
-        "data: {\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
+        "data: {\"model\":\"test\",\"created\":1623456789,\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n"
     ]
     
     defer {
@@ -628,7 +628,7 @@ func testRespondPartiallyMalformedResponses() async throws {
     MockURLProtocol.shouldStream = true
     MockURLProtocol.streamingChunks = [
         "data: {\"invalid json\n", // Malformed JSON (should be skipped)
-        "data: {\"model\":\"test\",\"created\":1623456789,\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":20,\"total_tokens\":30},\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n", // Valid
+        "data: {\"model\":\"test\",\"created\":1623456789,\"choices\":[{\"index\":0,\"text\":\"{\\\"destination\\\": \\\"Japan\\\"}\"}]}\n", // Valid streaming response
         "invalid line format\n", // Invalid line (should be skipped)
         "\n", // Empty line (should be skipped)
         "data: [DONE]\n" // SSE termination (should be skipped)
@@ -658,6 +658,7 @@ func testRespondPartiallyMalformedResponses() async throws {
     #expect(!receivedPartials.isEmpty, "Should process valid responses despite malformed ones")
     #expect(receivedPartials.first?.destination == .japan, "Should parse valid response correctly")
 }
+
 
 @Test("Provider payload contains correct model and prompt")
 func testProviderPayloadContents() async throws {

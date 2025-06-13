@@ -50,8 +50,8 @@ struct CompatibleOpenAIProviderResponse: LanguageModelProviderResponse {
     let model: String
     /// Unix timestamp of when the response was created.
     let created: Int
-    /// Token usage statistics.
-    let usage: Usage
+    /// Token usage statistics. Optional since streaming responses may not include usage until completion.
+    let usage: Usage?
     /// Array of generated choices.
     let choices: [Choice]
     
