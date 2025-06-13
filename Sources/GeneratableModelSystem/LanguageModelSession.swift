@@ -76,6 +76,13 @@ public struct LanguageModelSession {
     /// If `nil`, falls back to `URLSession.shared`.
     public static var defaultURLSession: URLSession?
     
+    /// When enabled, prints observability information for all API calls including:
+    /// - Complete URL with query string
+    /// - HTTP body being sent to the API
+    /// - Response text from accumulated model response
+    /// - Total tokens used (if available)
+    public static var enableObservability: Bool = false
+    
     /// Creates a language model session with the specified model name.
     /// 
     /// - Parameter name: The name of the language model to use (e.g., "gpt-4", "claude-3").
@@ -234,6 +241,15 @@ public struct LanguageModelSession {
         request.setValue("Bearer \(activeProvider.apiKey)", forHTTPHeaderField: "Authorization")
         request.httpBody = try buildRequestBody(with: inputBuilder(), for: activeProvider, streaming: false)
         
+        // Observability logging for request
+        if Self.enableObservability {
+            print("🔍 [LanguageModelSession.generate] API Request:")
+            print("   URL: \(request.url?.absoluteString ?? "unknown")")
+            if let httpBody = request.httpBody, let bodyString = String(data: httpBody, encoding: .utf8) {
+                print("   HTTP Body: \(bodyString)")
+            }
+        }
+        
         let (bytes, response) = try await activeURLSession.bytes(for: request)
         var accumulator: [String] = []
         
@@ -243,6 +259,8 @@ public struct LanguageModelSession {
             throw LanguageModelSessionError.invalidResponseStatusCode
         }
 
+        var lastProviderResponse: (any LanguageModelProviderResponse)?
+        
         for try await line in bytes.lines {
             guard let data = line.data(using: .utf8) else {
                 // Log data conversion error but continue processing
@@ -252,15 +270,29 @@ public struct LanguageModelSession {
             do {
                 let providerResponse = try JSONDecoder().decode(activeProvider.api.providerResponseType, from: data)
                 accumulator.append(providerResponse.contents)
+                lastProviderResponse = providerResponse
             } catch {
                 // Log JSON decode error but continue processing
                 continue
             }
         }
         
-        return accumulator
+        let responseText = accumulator
             .joined()
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Observability logging for response
+        if Self.enableObservability {
+            print("📤 [LanguageModelSession.generate] API Response:")
+            print("   Response Text: \(responseText)")
+            
+            if let compatibleResponse = lastProviderResponse as? CompatibleOpenAIProviderResponse,
+               let usage = compatibleResponse.usage {
+                print("   Total Tokens Used: \(usage.totalTokens)")
+            }
+        }
+        
+        return responseText
     }
     
     /// Generates a structured response using a PromptBuilder closure and JSON parsing.
@@ -299,6 +331,15 @@ public struct LanguageModelSession {
         request.setValue("Bearer \(activeProvider.apiKey)", forHTTPHeaderField: "Authorization")
         request.httpBody = try buildRequestBody(with: inputBuilder(), for: activeProvider, streaming: false)
         
+        // Observability logging for request
+        if Self.enableObservability {
+            print("🔍 [LanguageModelSession.respond] API Request:")
+            print("   URL: \(request.url?.absoluteString ?? "unknown")")
+            if let httpBody = request.httpBody, let bodyString = String(data: httpBody, encoding: .utf8) {
+                print("   HTTP Body: \(bodyString)")
+            }
+        }
+        
         let (bytes, response) = try await activeURLSession.bytes(for: request)
         var accumulator: [String] = []
         
@@ -308,6 +349,8 @@ public struct LanguageModelSession {
             throw LanguageModelSessionError.invalidResponseStatusCode
         }
 
+        var lastProviderResponse: (any LanguageModelProviderResponse)?
+        
         for try await line in bytes.lines {
             guard let data = line.data(using: .utf8) else {
                 // Log data conversion error but continue processing
@@ -317,6 +360,7 @@ public struct LanguageModelSession {
             do {
                 let providerResponse = try JSONDecoder().decode(activeProvider.api.providerResponseType, from: data)
                 accumulator.append(providerResponse.contents)
+                lastProviderResponse = providerResponse
             } catch {
                 // Log JSON decode error but continue processing
                 continue
@@ -327,6 +371,17 @@ public struct LanguageModelSession {
             .joined()
             .trimmingCharacters(in: .whitespacesAndNewlines)
             
+        // Observability logging for response
+        if Self.enableObservability {
+            print("📤 [LanguageModelSession.respond] API Response:")
+            print("   Response Text: \(responseText)")
+            
+            if let compatibleResponse = lastProviderResponse as? CompatibleOpenAIProviderResponse,
+               let usage = compatibleResponse.usage {
+                print("   Total Tokens Used: \(usage.totalTokens)")
+            }
+        }
+        
         guard let jsonString = responseText.extractJSON() else {
             throw LanguageModelSessionError.invalidResponseFormat(responseText)
         }
@@ -396,6 +451,15 @@ public struct LanguageModelSession {
                     request.setValue("Bearer \(activeProvider.apiKey)", forHTTPHeaderField: "Authorization")
                     request.httpBody = try buildRequestBody(with: input, for: activeProvider, streaming: true)
                     
+                    // Observability logging for request
+                    if Self.enableObservability {
+                        print("🔍 [LanguageModelSession.respondPartially] API Request:")
+                        print("   URL: \(request.url?.absoluteString ?? "unknown")")
+                        if let httpBody = request.httpBody, let bodyString = String(data: httpBody, encoding: .utf8) {
+                            print("   HTTP Body: \(bodyString)")
+                        }
+                    }
+                    
                     let (bytes, response) = try await activeURLSession.bytes(for: request)
                     var accumulator: [String] = []
                     
@@ -407,6 +471,7 @@ public struct LanguageModelSession {
                     }
 
                     var parseErrors: [Error] = []
+                    var lastProviderResponse: (any LanguageModelProviderResponse)?
                     
                     for try await line in bytes.lines {
                         // Use provider-specific preprocessing for streaming format
@@ -421,6 +486,7 @@ public struct LanguageModelSession {
                             let providerResponse = try JSONDecoder().decode(activeProvider.api.providerResponseType, from: data)
                             let newContent = providerResponse.contents
                             accumulator.append(newContent)
+                            lastProviderResponse = providerResponse
                             
                             // Try parsing with accumulated content
                             let fullText = accumulator.joined().trimmingCharacters(in: .whitespacesAndNewlines)
@@ -446,6 +512,17 @@ public struct LanguageModelSession {
                     let responseText = accumulator
                         .joined()
                         .trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    // Observability logging for response
+                    if Self.enableObservability {
+                        print("📤 [LanguageModelSession.respondPartially] API Response:")
+                        print("   Response Text: \(responseText)")
+                        
+                        if let compatibleResponse = lastProviderResponse as? CompatibleOpenAIProviderResponse,
+                           let usage = compatibleResponse.usage {
+                            print("   Total Tokens Used: \(usage.totalTokens)")
+                        }
+                    }
                     
                     if let jsonString = responseText.extractJSON(),
                        let jsonData = jsonString.data(using: .utf8),
