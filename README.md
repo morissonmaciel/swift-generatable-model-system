@@ -1,4 +1,4 @@
-# swift-generatable-model-system.
+# swift-generatable-model-system
 A structured and type-safe Swift library for communicating with large language models. Provides Language Model Sessions and type-safe structures whose JSON descriptions are used in prompts to ensure structured response types.
 
 ## Overview
